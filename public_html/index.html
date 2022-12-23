@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Encrypted Web-Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+    <style>
+      .msgbox {
+        display:inline;
+        max-width:70%;
+        margin-bottom: 0px!important;
+    } .send-btn {
+        max-width:20%;
+        display:inline;
+        float:right;
+        margin-bottom: 0px;
+    } .chat-footer {
+        position: fixed;
+        bottom: 0;
+        padding-bottom: 0px!important;
+        padding-top: 0px!important;
+    }
+    li:nth-child(odd) {background: #152028}
+    </style>
+  </head>
+  <body>
+    <center>
+        <h3 style="font-family:monospace">Simple Encrypted Webchat</h3>
+    </center>
+    <ul id="messages"></ul>
+    <footer class="chat-footer">
+    <form id="form" action="" style="margin-bottom: 0px;">
+      <div class="form-container">
+        <button id="username-trigger" style="max-width:8%;display:inline;padding:12px 0px;" class="contrast">username</button>
+        <input class="msgbox" id="input" autocomplete="off" /><button class="send-btn">Send</button>
+      </div>
+    </form>
+    </footer>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        var socket = io();
+        var messages = document.getElementById('messages');
+        var form = document.getElementById('form');
+        var input = document.getElementById('input');
+
+        socket.emit('assign username');
+        socket.on('assign username', function(msg) {
+            var username = document.getElementById('username-trigger');
+            console.log("set-username",msg)
+            username.textContent = msg;
+        });
+
+        socket.emit('get chat history');
+        socket.on('get chat history', function(msg) {
+          for(i=0; i < msg.length;i++) {
+            var item = document.createElement('li');
+          // Create a "li" element:
+        const textNode = document.createTextNode(msg[i]);
+        // Append text node to "li" element:
+        item.appendChild(textNode);
+        // Insert before existing child:
+        messages.insertBefore(item, messages.children[0]);
+          window.scrollTo(0, document.body.scrollHeight);
+        }});
+         
+      
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          // get username
+          username = document.getElementById('username-trigger').textContent;
+          if (input.value) {
+            socket.emit('chat message', {name:username,text:input.value});
+            input.value = '';
+          }
+        });
+        
+        socket.on('chat message', function(msg) {
+        var item = document.createElement('li');
+          // Create a "li" element:
+        const textNode = document.createTextNode(msg);
+        // Append text node to "li" element:
+        item.appendChild(textNode);
+        // Insert before existing child:
+        messages.insertBefore(item, messages.children[0]);
+          window.scrollTo(0, document.body.scrollHeight);
+        });
+      </script>
+  </body>
+</html>
